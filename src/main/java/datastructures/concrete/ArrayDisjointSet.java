@@ -16,6 +16,7 @@ public class ArrayDisjointSet<T> implements IDisjointSet<T> {
     // successfully implement this class.
 
     public ArrayDisjointSet() {
+        // can you check ?
         // TODO: your code here
         throw new NotYetImplementedException();
     }
