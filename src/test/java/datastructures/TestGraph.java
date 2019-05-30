@@ -192,7 +192,6 @@ public class TestGraph extends BaseTest {
         edges.add(edge("c", "d", 1));
 
         return new Graph<>(vertices, edges);
-
     }
 
     public Graph<String, SimpleEdge> buildNonSimpleGraph() {
@@ -324,13 +323,26 @@ public class TestGraph extends BaseTest {
 
     @Test(timeout=SECOND)
     public void testFindingMst() {
-        Graph<String, SimpleEdge> graph = this.buildSimpleGraph();
+        IList<String> vertices = new DoubleLinkedList<>();
+        vertices.add("a");
+        vertices.add("b");
+        vertices.add("c");
+        vertices.add("d");
+
+        IList<SimpleEdge> edges = new DoubleLinkedList<>();
+        edges.add(edge("a", "b", 2));
+        edges.add(edge("a", "c", 3));
+
+        edges.add(edge("c", "d", 1));
+
+        Graph<String, SimpleEdge> graph = new Graph<>(vertices, edges);
+
         ISet<SimpleEdge> mst = graph.findMinimumSpanningTree();
 
         assertEquals(graph.numVertices() - 1, mst.size());
-        assertTrue(mst.contains(edge("a", "b", 2)));
-        assertTrue(mst.contains(edge("a", "c", 3)));
-        assertTrue(mst.contains(edge("c", "d", 1)));
+        for (SimpleEdge edge : edges) {
+            assertTrue(mst.contains(edge));
+        }
     }
 
     @Test(timeout=SECOND)
