@@ -64,9 +64,28 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if 'vertices' or 'edges' are null or contain null
      * @throws IllegalArgumentException if 'vertices' contains duplicates
      */
+    private ISet<V> vertexSet;
     public Graph(IList<V> vertices, IList<E> edges) {
-        // TODO: Your code here
-        throw new NotYetImplementedException();
+        if (vertices == null || vertices.isEmpty() || edges == null || edges.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        vertexSet = new ChainedHashSet<>();
+        for (V vertex : vertices) {
+            if (vertex == null || vertexSet.contains(vertex)) {
+                throw new IllegalArgumentException();
+            }
+            vertexSet.add(vertex);
+        }
+        for (E edge : edges) {
+            if (edge.getWeight() < 0) {
+                throw new IllegalArgumentException();
+            }
+            if (!vertexSet.contains(edge.getVertex1()) || !vertexSet.contains(edge.getVertex2())) {
+                throw new IllegalArgumentException();
+            }
+        }
+
+
     }
 
     /**
