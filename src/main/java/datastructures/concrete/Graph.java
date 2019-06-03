@@ -1,5 +1,7 @@
 package datastructures.concrete;
 
+import datastructures.concrete.dictionaries.ChainedHashDictionary;
+import datastructures.interfaces.IDictionary;
 import datastructures.interfaces.IEdge;
 import datastructures.interfaces.IList;
 import datastructures.interfaces.ISet;
@@ -64,25 +66,40 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if 'vertices' or 'edges' are null or contain null
      * @throws IllegalArgumentException if 'vertices' contains duplicates
      */
-    private ISet<V> vertexSet;
+    //I use adjacency list because I am not familiar with adjacency matrix
+    private IDictionary<V, IList<E>> graph;
+    private int numVertices;
+    private int numEdges;
+
     public Graph(IList<V> vertices, IList<E> edges) {
         if (vertices == null || vertices.isEmpty() || edges == null || edges.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        vertexSet = new ChainedHashSet<>();
+        graph = new ChainedHashDictionary<>();
         for (V vertex : vertices) {
-            if (vertex == null || vertexSet.contains(vertex)) {
+            if (vertex == null || graph.containsKey(vertex)) {
                 throw new IllegalArgumentException();
             }
-            vertexSet.add(vertex);
+            graph.put(vertex, new DoubleLinkedList<>());
+            numVertices++;
         }
         for (E edge : edges) {
             if (edge.getWeight() < 0) {
                 throw new IllegalArgumentException();
             }
-            if (!vertexSet.contains(edge.getVertex1()) || !vertexSet.contains(edge.getVertex2())) {
+            if (!graph.containsKey(edge.getVertex1()) || !graph.containsKey(edge.getVertex2())) {
                 throw new IllegalArgumentException();
             }
+            //wondering how to put it in the graph. I think this is right
+            //getting the linked list
+            IList<E> edgeTemp = graph.get(edge.getVertex1());
+            edgeTemp.add(edge);
+            graph.put(edge.getVertex1(), edgeTemp);
+
+            IList<E> edgeTemp2 = graph.get(edge.getVertex2());
+            edgeTemp2.add(edge);
+            graph.put(edge.getVertex2(), edgeTemp2);
+            numEdges++;
         }
 
 
@@ -120,16 +137,15 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Returns the number of vertices contained within this graph.
      */
     public int numVertices() {
-        // TODO: your code here
-        throw new NotYetImplementedException();
+
+        return numVertices;
     }
 
     /**
      * Returns the number of edges contained within this graph.
      */
     public int numEdges() {
-        // TODO: your code here
-        throw new NotYetImplementedException();
+        return numEdges;
     }
 
     /**
@@ -159,6 +175,9 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if start or end is null or not in the graph
      */
     public IList<E> findShortestPathBetween(V start, V end) {
+        if (start == null || end == null || !graph.containsKey(start)|| !graph.containsKey(end)){
+            throw new IllegalArgumentException();
+        }
         // TODO: your code here
         throw new NotYetImplementedException();
     }
