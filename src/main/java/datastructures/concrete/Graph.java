@@ -1,10 +1,8 @@
 package datastructures.concrete;
 
 import datastructures.concrete.dictionaries.ChainedHashDictionary;
-import datastructures.interfaces.IDictionary;
-import datastructures.interfaces.IEdge;
-import datastructures.interfaces.IList;
-import datastructures.interfaces.ISet;
+import datastructures.interfaces.*;
+import misc.Sorter;
 import misc.exceptions.NoPathExistsException;
 import misc.exceptions.NotYetImplementedException;
 
@@ -70,11 +68,16 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
     private IDictionary<V, ISet<E>> graph;
     private int numVertices;
     private int numEdges;
+    IList<E> edgesTemp;
+    IList<V> verticesTemp;
+
 
     public Graph(IList<V> vertices, IList<E> edges) {
         if (vertices == null || vertices.isEmpty() || edges == null || edges.isEmpty()) {
             throw new IllegalArgumentException();
         }
+        edgesTemp = edges;
+        verticesTemp = vertices;
         graph = new ChainedHashDictionary<>();
         for (V vertex : vertices) {
             if (vertex == null || graph.containsKey(vertex)) {
@@ -137,7 +140,6 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Returns the number of vertices contained within this graph.
      */
     public int numVertices() {
-
         return numVertices;
     }
 
@@ -157,8 +159,23 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Precondition: the graph does not contain any unconnected components.
      */
     public ISet<E> findMinimumSpanningTree() {
-        // TODO: your code here
-        throw new NotYetImplementedException();
+
+        ISet<E> output = new ChainedHashSet<>();
+        //makeset
+        IDisjointSet<V> vertex = new ArrayDisjointSet<>();
+        for (V vertices : verticesTemp){
+            vertex.makeSet(vertices);
+        }
+        //sort the edges
+        IList<E> edgesSorted = Sorter.topKSort(numEdges, edgesTemp);
+        for (E item : edgesSorted){
+            //if different components
+            if (vertex.findSet(item.getVertex2()) != vertex.findSet(item.getVertex1())){
+                vertex.union(item.getVertex1(), item.getVertex2());
+                output.add(item);
+            }
+        }
+        return output;
     }
 
     /**
