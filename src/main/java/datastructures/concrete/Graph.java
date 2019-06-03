@@ -1,10 +1,8 @@
 package datastructures.concrete;
 
-import datastructures.interfaces.IDisjointSet;
 import datastructures.interfaces.IEdge;
 import datastructures.interfaces.IList;
 import datastructures.interfaces.ISet;
-import misc.Sorter;
 import misc.exceptions.NoPathExistsException;
 import misc.exceptions.NotYetImplementedException;
 
@@ -66,30 +64,34 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if 'vertices' or 'edges' are null or contain null
      * @throws IllegalArgumentException if 'vertices' contains duplicates
      */
-    private ISet<V> vSet;
-    private IList<E> eSet;
+    //I use adjacency list because I am not familiar with adjacency matrix
+    private IDictionary<V, ISet<E>> graph;
+    private int numVertices;
+    private int numEdges;
+    IList<E> edgesTemp;
+    IList<V> verticesTemp;
+
+
     public Graph(IList<V> vertices, IList<E> edges) {
-        for (E edge :edges) {
+        if (vertices == null || vertices.isEmpty() || edges == null || edges.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        vertexSet = new ChainedHashSet<>();
+        for (V vertex : vertices) {
+            if (vertex == null || vertexSet.contains(vertex)) {
+                throw new IllegalArgumentException();
+            }
+            vertexSet.add(vertex);
+        }
+        for (E edge : edges) {
             if (edge.getWeight() < 0) {
                 throw new IllegalArgumentException();
             }
-            if (!vertices.contains(edge.getVertex1()) || !vertices.contains(edge.getVertex2())) {
-                throw new IllegalArgumentException();
-            }
-            if (edge == null) {
+            if (!vertexSet.contains(edge.getVertex1()) || !vertexSet.contains(edge.getVertex2())) {
                 throw new IllegalArgumentException();
             }
         }
-        for (V vertex : vertices) {
-            if (vertex == null ) {
-                throw new IllegalArgumentException();
-            }
-            vSet.add(vertex);
-        }
-        eSet = edges;
-        if (vertices.size() != vSet.size()) {
-            throw new IllegalArgumentException();
-        }
+
 
     }
 
@@ -125,14 +127,14 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Returns the number of vertices contained within this graph.
      */
     public int numVertices() {
-        return vSet.size();
+        return numVertices;
     }
 
     /**
      * Returns the number of edges contained within this graph.
      */
     public int numEdges() {
-        return eSet.size();
+        return numEdges;
     }
 
     /**
@@ -144,12 +146,23 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Precondition: the graph does not contain any unconnected components.
      */
     public ISet<E> findMinimumSpanningTree() {
-        IList<E> sorted = Sorter.topKSort(eSet.size(), eSet);
-        ISet<E> output = new ChainedHashSet<>();
-        IDisjointSet<E> disjoint = new ArrayDisjointSet<>();
-        for (E edge : sorted) {
 
+        ISet<E> output = new ChainedHashSet<>();
+        //makeset
+        IDisjointSet<V> vertex = new ArrayDisjointSet<>();
+        for (V vertices : verticesTemp){
+            vertex.makeSet(vertices);
         }
+        //sort the edges
+        IList<E> edgesSorted = Sorter.topKSort(numEdges, edgesTemp);
+        for (E item : edgesSorted){
+            //if different components
+            if (vertex.findSet(item.getVertex2()) != vertex.findSet(item.getVertex1())){
+                vertex.union(item.getVertex1(), item.getVertex2());
+                output.add(item);
+            }
+        }
+        return output;
     }
 
     /**
@@ -166,6 +179,9 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if start or end is null or not in the graph
      */
     public IList<E> findShortestPathBetween(V start, V end) {
+        if (start == null || end == null || !graph.containsKey(start)|| !graph.containsKey(end)){
+            throw new IllegalArgumentException();
+        }
         // TODO: your code here
         throw new NotYetImplementedException();
     }
