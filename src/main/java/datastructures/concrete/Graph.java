@@ -1,8 +1,10 @@
 package datastructures.concrete;
 
+import datastructures.interfaces.IDisjointSet;
 import datastructures.interfaces.IEdge;
 import datastructures.interfaces.IList;
 import datastructures.interfaces.ISet;
+import misc.Sorter;
 import misc.exceptions.NoPathExistsException;
 import misc.exceptions.NotYetImplementedException;
 
@@ -64,27 +66,30 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if 'vertices' or 'edges' are null or contain null
      * @throws IllegalArgumentException if 'vertices' contains duplicates
      */
-    private ISet<V> vertexSet;
+    private ISet<V> vSet;
+    private IList<E> eSet;
     public Graph(IList<V> vertices, IList<E> edges) {
-        if (vertices == null || vertices.isEmpty() || edges == null || edges.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-        vertexSet = new ChainedHashSet<>();
-        for (V vertex : vertices) {
-            if (vertex == null || vertexSet.contains(vertex)) {
-                throw new IllegalArgumentException();
-            }
-            vertexSet.add(vertex);
-        }
-        for (E edge : edges) {
+        for (E edge :edges) {
             if (edge.getWeight() < 0) {
                 throw new IllegalArgumentException();
             }
-            if (!vertexSet.contains(edge.getVertex1()) || !vertexSet.contains(edge.getVertex2())) {
+            if (!vertices.contains(edge.getVertex1()) || !vertices.contains(edge.getVertex2())) {
+                throw new IllegalArgumentException();
+            }
+            if (edge == null) {
                 throw new IllegalArgumentException();
             }
         }
-
+        for (V vertex : vertices) {
+            if (vertex == null ) {
+                throw new IllegalArgumentException();
+            }
+            vSet.add(vertex);
+        }
+        eSet = edges;
+        if (vertices.size() != vSet.size()) {
+            throw new IllegalArgumentException();
+        }
 
     }
 
@@ -120,16 +125,14 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Returns the number of vertices contained within this graph.
      */
     public int numVertices() {
-        // TODO: your code here
-        throw new NotYetImplementedException();
+        return vSet.size();
     }
 
     /**
      * Returns the number of edges contained within this graph.
      */
     public int numEdges() {
-        // TODO: your code here
-        throw new NotYetImplementedException();
+        return eSet.size();
     }
 
     /**
@@ -141,8 +144,12 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Precondition: the graph does not contain any unconnected components.
      */
     public ISet<E> findMinimumSpanningTree() {
-        // TODO: your code here
-        throw new NotYetImplementedException();
+        IList<E> sorted = Sorter.topKSort(eSet.size(), eSet);
+        ISet<E> output = new ChainedHashSet<>();
+        IDisjointSet<E> disjoint = new ArrayDisjointSet<>();
+        for (E edge : sorted) {
+
+        }
     }
 
     /**
