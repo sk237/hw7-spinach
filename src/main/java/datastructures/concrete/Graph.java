@@ -67,7 +67,7 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if 'vertices' contains duplicates
      */
     //I use adjacency list because I am not familiar with adjacency matrix
-    private IDictionary<V, IList<E>> graph;
+    private IDictionary<V, ISet<E>> graph;
     private int numVertices;
     private int numEdges;
 
@@ -80,7 +80,7 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
             if (vertex == null || graph.containsKey(vertex)) {
                 throw new IllegalArgumentException();
             }
-            graph.put(vertex, new DoubleLinkedList<>());
+            graph.put(vertex, new ChainedHashSet<>());
             numVertices++;
         }
         for (E edge : edges) {
@@ -92,11 +92,11 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
             }
             //wondering how to put it in the graph. I think this is right
             //getting the linked list
-            IList<E> edgeTemp = graph.get(edge.getVertex1());
+            ISet<E> edgeTemp = graph.get(edge.getVertex1());
             edgeTemp.add(edge);
             graph.put(edge.getVertex1(), edgeTemp);
 
-            IList<E> edgeTemp2 = graph.get(edge.getVertex2());
+            ISet<E> edgeTemp2 = graph.get(edge.getVertex2());
             edgeTemp2.add(edge);
             graph.put(edge.getVertex2(), edgeTemp2);
             numEdges++;
