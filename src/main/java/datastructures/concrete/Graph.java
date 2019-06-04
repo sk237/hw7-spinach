@@ -1,10 +1,14 @@
 package datastructures.concrete;
 
+import datastructures.concrete.dictionaries.ChainedHashDictionary;
 import datastructures.interfaces.IEdge;
+import datastructures.interfaces.IDisjointSet;
 import datastructures.interfaces.IList;
 import datastructures.interfaces.ISet;
+import datastructures.interfaces.IDictionary;
+import datastructures.interfaces.IPriorityQueue;
+import misc.Sorter;
 import misc.exceptions.NoPathExistsException;
-import misc.exceptions.NotYetImplementedException;
 
 /**
  * Represents an undirected, weighted graph, possibly containing self-loops, parallel edges,
@@ -64,34 +68,33 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if 'vertices' or 'edges' are null or contain null
      * @throws IllegalArgumentException if 'vertices' contains duplicates
      */
-    //I use adjacency list because I am not familiar with adjacency matrix
-    private IDictionary<V, ISet<E>> graph;
-    private int numVertices;
-    private int numEdges;
-    IList<E> edgesTemp;
-    IList<V> verticesTemp;
-
+    ISet<V> vSet;
+    IList<E> eSet;
 
     public Graph(IList<V> vertices, IList<E> edges) {
-        if (vertices == null || vertices.isEmpty() || edges == null || edges.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-        vertexSet = new ChainedHashSet<>();
-        for (V vertex : vertices) {
-            if (vertex == null || vertexSet.contains(vertex)) {
+
+        vSet = new ChainedHashSet<>();
+        eSet= new DoubleLinkedList<>();
+
+        for (V v : vertices) {
+            if (v == null || vSet.contains(v)) {
                 throw new IllegalArgumentException();
             }
-            vertexSet.add(vertex);
-        }
-        for (E edge : edges) {
-            if (edge.getWeight() < 0) {
-                throw new IllegalArgumentException();
-            }
-            if (!vertexSet.contains(edge.getVertex1()) || !vertexSet.contains(edge.getVertex2())) {
-                throw new IllegalArgumentException();
-            }
+            vSet.add(v);
         }
 
+        for (E e : edges) {
+            if (e.getWeight() < 0) {
+                throw new IllegalArgumentException();
+            }
+            if (!vSet.contains(e.getVertex1()) || !vSet.contains(e.getVertex2())) {
+                throw new IllegalArgumentException();
+            }
+            if (e == null) {
+                throw new IllegalArgumentException();
+            }
+            eSet.add(e);
+        }
 
     }
 
@@ -127,14 +130,14 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Returns the number of vertices contained within this graph.
      */
     public int numVertices() {
-        return numVertices;
+        return vSet.size();
     }
 
     /**
      * Returns the number of edges contained within this graph.
      */
     public int numEdges() {
-        return numEdges;
+        return eSet.size();
     }
 
     /**
@@ -146,24 +149,22 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * Precondition: the graph does not contain any unconnected components.
      */
     public ISet<E> findMinimumSpanningTree() {
-
+        IList<E> sorted = Sorter.topKSort(eSet.size(), eSet);
+        IDisjointSet<V> set = new ArrayDisjointSet<>();
         ISet<E> output = new ChainedHashSet<>();
-        //makeset
-        IDisjointSet<V> vertex = new ArrayDisjointSet<>();
-        for (V vertices : verticesTemp){
-            vertex.makeSet(vertices);
+        for (V v :vSet) {
+            set.makeSet(v);
         }
-        //sort the edges
-        IList<E> edgesSorted = Sorter.topKSort(numEdges, edgesTemp);
-        for (E item : edgesSorted){
-            //if different components
-            if (vertex.findSet(item.getVertex2()) != vertex.findSet(item.getVertex1())){
-                vertex.union(item.getVertex1(), item.getVertex2());
-                output.add(item);
+        for (E e : sorted) {
+            if (set.findSet(e.getVertex1()) != set.findSet(e.getVertex2())) {
+                output.add(e);
+                set.union(e.getVertex1(), e.getVertex2());
             }
         }
         return output;
     }
+
+
 
     /**
      * Returns the edges that make up the shortest path from the start
@@ -179,10 +180,79 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if start or end is null or not in the graph
      */
     public IList<E> findShortestPathBetween(V start, V end) {
-        if (start == null || end == null || !graph.containsKey(start)|| !graph.containsKey(end)){
+
+        if (start == null || end == null || !vSet.contains(start)) {
             throw new IllegalArgumentException();
         }
-        // TODO: your code here
-        throw new NotYetImplementedException();
+        Double inf = Double.POSITIVE_INFINITY;
+        IPriorityQueue<ComparableVertex<V, E>> que = new ArrayHeap<>();
+        IDictionary<V, ComparableVertex<V, E>> list = new ChainedHashDictionary<>();
+
+        for (V v : vSet) {
+            ComparableVertex<V, E> temp;
+
+            if (v.equals(start)) {
+                temp = new ComparableVertex<>(v, 0.0);
+            } else {
+                temp = new ComparableVertex<>(v, inf);
+            }
+            que.add(temp);
+            list.put(v, temp);
+        }
+
+        while (!que.isEmpty()) {
+            ComparableVertex<V, E> vertex = que.removeMin();
+            V v = vertex.name;
+            Double distance = vertex.distance;
+
+            if (v.equals(end) && vertex.distance < inf) {
+                return vertex.path;
+            }
+
+            for (E e : eSet) {
+
+                if (e.getVertex1().equals(v) || e.getVertex2().equals(v)) {
+                    V otherV = e.getOtherVertex(v);
+                    ComparableVertex<V, E> oldV;
+                    oldV = list.get(otherV);
+                    double oldD = oldV.distance;
+                    double newD = distance + e.getWeight();
+
+                    if (newD < oldD) {
+                        IList<E> path = new DoubleLinkedList<>();
+
+                        for (E prevPath : vertex.path) {
+                            path.add(prevPath);
+                        }
+                        ComparableVertex<V, E> newV;
+                        newV = new ComparableVertex<>(otherV, newD);
+                        path.add(e);
+                        newV.path = path;
+                        que.remove(oldV);
+                        que.add(newV);
+                        list.put(otherV, newV);
+                    }
+                }
+            }
+        }
+
+        throw new NoPathExistsException();
+    }
+
+    private static class ComparableVertex<V, E> implements Comparable<ComparableVertex<V, E>> {
+        IList<E> path;
+        final V name;
+        final double distance;
+        public ComparableVertex(V vertex, Double distance) {
+            this.path = new DoubleLinkedList<>();
+            this.name = vertex;
+            this.distance = distance;
+        }
+        public int compareTo(ComparableVertex<V, E> vertex){
+            if (distance < vertex.distance) {
+                return -1;
+            }
+            return 1;
+        }
     }
 }

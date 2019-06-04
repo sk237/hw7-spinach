@@ -49,7 +49,7 @@ public class ArrayHeap<T extends Comparable<T>> implements IPriorityQueue<T> {
      */
     private void percolateUp(int index) {
         int parent = (index - 1) / NUM_CHILDREN;
-        if (heap[parent].compareTo(heap[index]) > 0) {
+        if (index != parent && heap[parent].compareTo(heap[index]) > 0) {
             this.swap(index, parent);
             this.percolateUp(parent);
 

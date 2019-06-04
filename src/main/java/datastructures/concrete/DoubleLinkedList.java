@@ -25,6 +25,8 @@ public class DoubleLinkedList<T> implements IList<T> {
         this.size = 0;
     }
 
+
+
     @Override
     public void add(T item) {
         Node<T> temp = new Node<>(item);
