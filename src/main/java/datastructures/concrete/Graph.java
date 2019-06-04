@@ -10,6 +10,8 @@ import datastructures.interfaces.IPriorityQueue;
 import misc.Sorter;
 import misc.exceptions.NoPathExistsException;
 
+import java.util.Dictionary;
+
 /**
  * Represents an undirected, weighted graph, possibly containing self-loops, parallel edges,
  * and unconnected components.
@@ -70,17 +72,19 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      */
     ISet<V> vSet;
     IList<E> eSet;
+    IDictionary<V, IList<E>> adjacency;
 
     public Graph(IList<V> vertices, IList<E> edges) {
 
         vSet = new ChainedHashSet<>();
         eSet= new DoubleLinkedList<>();
-
+        adjacency = new ChainedHashDictionary<>();
         for (V v : vertices) {
             if (v == null || vSet.contains(v)) {
                 throw new IllegalArgumentException();
             }
             vSet.add(v);
+            adjacency.put(v, new DoubleLinkedList<>());
         }
 
         for (E e : edges) {
@@ -93,7 +97,10 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
             if (e == null) {
                 throw new IllegalArgumentException();
             }
+
             eSet.add(e);
+            adjacency.get(e.getVertex1()).add(e);
+            adjacency.get(e.getVertex2()).add(e);
         }
 
     }
@@ -209,29 +216,26 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
                 return vertex.path;
             }
 
-            for (E e : eSet) {
+            for (E e : adjacency.get(v)) {
 
-                if (e.getVertex1().equals(v) || e.getVertex2().equals(v)) {
-                    V otherV = e.getOtherVertex(v);
-                    ComparableVertex<V, E> oldV;
-                    oldV = list.get(otherV);
-                    double oldD = oldV.distance;
-                    double newD = distance + e.getWeight();
+                V otherV = e.getOtherVertex(v);
+                ComparableVertex<V, E> oldV;
+                oldV = list.get(otherV);
+                double oldD = oldV.distance;
+                double newD = distance + e.getWeight();
 
-                    if (newD < oldD) {
-                        IList<E> path = new DoubleLinkedList<>();
-
-                        for (E prevPath : vertex.path) {
-                            path.add(prevPath);
-                        }
-                        ComparableVertex<V, E> newV;
-                        newV = new ComparableVertex<>(otherV, newD);
-                        path.add(e);
-                        newV.path = path;
-                        que.remove(oldV);
-                        que.add(newV);
-                        list.put(otherV, newV);
+                if (newD < oldD) {
+                    IList<E> path = new DoubleLinkedList<>();
+                    for (E prevPath : vertex.path) {
+                        path.add(prevPath);
                     }
+                    ComparableVertex<V, E> newV;
+                    newV = new ComparableVertex<>(otherV, newD);
+                    path.add(e);
+                    newV.path = path;
+                    que.remove(oldV);
+                    que.add(newV);
+                    list.put(otherV, newV);
                 }
             }
         }
