@@ -10,7 +10,6 @@ import datastructures.interfaces.IPriorityQueue;
 import misc.Sorter;
 import misc.exceptions.NoPathExistsException;
 
-import java.util.Dictionary;
 
 /**
  * Represents an undirected, weighted graph, possibly containing self-loops, parallel edges,
