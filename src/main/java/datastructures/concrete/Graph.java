@@ -72,11 +72,12 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
     ISet<V> vSet;
     IList<E> eSet;
     IDictionary<V, IList<E>> adjacency;
-
     public Graph(IList<V> vertices, IList<E> edges) {
-
+        if (vertices == null || edges == null) {
+            throw new IllegalArgumentException();
+        }
         vSet = new ChainedHashSet<>();
-        eSet= new DoubleLinkedList<>();
+        eSet = new DoubleLinkedList<>();
         adjacency = new ChainedHashDictionary<>();
         for (V v : vertices) {
             if (v == null || vSet.contains(v)) {
@@ -85,7 +86,6 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
             vSet.add(v);
             adjacency.put(v, new DoubleLinkedList<>());
         }
-
         for (E e : edges) {
             if (e.getWeight() < 0) {
                 throw new IllegalArgumentException();
@@ -96,12 +96,10 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
             if (e == null) {
                 throw new IllegalArgumentException();
             }
-
             eSet.add(e);
             adjacency.get(e.getVertex1()).add(e);
             adjacency.get(e.getVertex2()).add(e);
         }
-
     }
 
     /**
@@ -170,8 +168,6 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
         return output;
     }
 
-
-
     /**
      * Returns the edges that make up the shortest path from the start
      * to the end.
@@ -186,17 +182,14 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws IllegalArgumentException if start or end is null or not in the graph
      */
     public IList<E> findShortestPathBetween(V start, V end) {
-
         if (start == null || end == null || !vSet.contains(start)) {
             throw new IllegalArgumentException();
         }
         Double inf = Double.POSITIVE_INFINITY;
         IPriorityQueue<ComparableVertex<V, E>> que = new ArrayHeap<>();
         IDictionary<V, ComparableVertex<V, E>> list = new ChainedHashDictionary<>();
-
         for (V v : vSet) {
             ComparableVertex<V, E> temp;
-
             if (v.equals(start)) {
                 temp = new ComparableVertex<>(v, 0.0);
             } else {
@@ -205,24 +198,19 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
             que.add(temp);
             list.put(v, temp);
         }
-
         while (!que.isEmpty()) {
             ComparableVertex<V, E> vertex = que.removeMin();
             V v = vertex.name;
             Double distance = vertex.distance;
-
             if (v.equals(end) && vertex.distance < inf) {
                 return vertex.path;
             }
-
             for (E e : adjacency.get(v)) {
-
                 V otherV = e.getOtherVertex(v);
                 ComparableVertex<V, E> oldV;
                 oldV = list.get(otherV);
                 double oldD = oldV.distance;
                 double newD = distance + e.getWeight();
-
                 if (newD < oldD) {
                     IList<E> path = new DoubleLinkedList<>();
                     for (E prevPath : vertex.path) {
@@ -238,7 +226,6 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
                 }
             }
         }
-
         throw new NoPathExistsException();
     }
 
@@ -246,11 +233,13 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
         IList<E> path;
         final V name;
         final double distance;
+
         public ComparableVertex(V vertex, Double distance) {
             this.path = new DoubleLinkedList<>();
             this.name = vertex;
             this.distance = distance;
         }
+
         public int compareTo(ComparableVertex<V, E> vertex){
             if (distance < vertex.distance) {
                 return -1;
