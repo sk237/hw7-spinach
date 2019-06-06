@@ -29,6 +29,9 @@ public class KruskalMazeCarver implements MazeCarver {
         }
 
         ISet<Wall> wallRemove = graph.findMinimumSpanningTree();
+        for (Wall walls : maze.getWalls()){
+            walls.resetDistanceToOriginal();
+        }
         return wallRemove;
     }
 }
