@@ -1,7 +1,6 @@
 package mazes.entities;
 
 import datastructures.interfaces.ISet;
-
 import java.awt.*;
 
 /**

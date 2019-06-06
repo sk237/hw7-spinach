@@ -15,7 +15,6 @@ import java.util.Random;
 public class KruskalMazeCarver implements MazeCarver {
     @Override
     public ISet<Wall> returnWallsToRemove(Maze maze) {
-
         // Note: make sure that the input maze remains unmodified after this method is over.
         //
         // In particular, if you call 'wall.setDistance()' at any point, make sure to
