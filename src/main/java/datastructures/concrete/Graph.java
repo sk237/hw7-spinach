@@ -181,30 +181,93 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
      * @throws NoPathExistsException  if there does not exist a path from the start to the end
      * @throws IllegalArgumentException if start or end is null or not in the graph
      */
+    // public IList<E> findShortestPathBetween(V start, V end) {
+    //     if (start == null || end == null || !vSet.contains(start)) {
+    //         throw new IllegalArgumentException();
+    //     }
+    //     double inf = Double.POSITIVE_INFINITY;
+    //     IPriorityQueue<ComparableVertex<V, E>> que = new ArrayHeap<>();
+    //     IDictionary<V, ComparableVertex<V, E>> list = new ChainedHashDictionary<>();
+    //     for (V v : vSet) {
+    //         ComparableVertex<V, E> temp;
+    //         if (v.equals(start)) {
+    //             temp = new ComparableVertex<>(v, 0.0);
+    //         } else {
+    //             temp = new ComparableVertex<>(v, inf);
+    //         }
+    //         que.add(temp);
+    //         list.put(v, temp);
+    //     }
+    //     while (!que.isEmpty() && !que.peekMin().name.equals(end)) {
+    //         ComparableVertex<V, E> vertex = que.removeMin();
+    //         V v = vertex.name;
+    //         double distance = vertex.distance;
+    //         for (E e : adjacency.get(v)) {
+    //             V otherV = e.getOtherVertex(v);
+    //             ComparableVertex<V, E> oldV;
+    //             oldV = list.get(otherV);
+    //             double oldD = oldV.distance;
+    //             double newD = distance + e.getWeight();
+    //             if (newD < oldD) {
+    //                 IList<E> path = new DoubleLinkedList<>();
+    //                 for (E prevPath : vertex.path) {
+    //                     path.add(prevPath);
+    //                 }
+    //                 ComparableVertex<V, E> newV;
+    //                 newV = new ComparableVertex<>(otherV, newD);
+    //                 path.add(e);
+    //                 newV.path = path;
+    //                 que.remove(oldV);
+    //                 que.add(newV);
+    //                 list.put(otherV, newV);
+    //             }
+    //         }
+    //     }
+    //     ComparableVertex<V, E> v = list.get(end);
+    //     if (v.distance == inf) {
+    //         throw new NoPathExistsException();
+    //     }
+    //     return v.path;
+    // }
+    //
+    // private static class ComparableVertex<V, E> implements Comparable<ComparableVertex<V, E>> {
+    //     IList<E> path;
+    //     final V name;
+    //     final double distance;
+    //
+    //     public ComparableVertex(V vertex, Double distance) {
+    //         this.path = new DoubleLinkedList<>();
+    //         this.name = vertex;
+    //         this.distance = distance;
+    //     }
+    //
+    //     public int compareTo(ComparableVertex<V, E> vertex){
+    //         return (int) (this.distance - vertex.distance);
+    //     }
+    // }
+    //
     public IList<E> findShortestPathBetween(V start, V end) {
         if (start == null || end == null || !vSet.contains(start)) {
             throw new IllegalArgumentException();
         }
-        Double inf = Double.POSITIVE_INFINITY;
+        double inf = Double.POSITIVE_INFINITY;
         IPriorityQueue<ComparableVertex<V, E>> que = new ArrayHeap<>();
         IDictionary<V, ComparableVertex<V, E>> list = new ChainedHashDictionary<>();
+        IList<E> output = new DoubleLinkedList<>();
         for (V v : vSet) {
             ComparableVertex<V, E> temp;
             if (v.equals(start)) {
-                temp = new ComparableVertex<>(v, 0.0);
+                temp = new ComparableVertex<>(v, 0.0, null);
             } else {
-                temp = new ComparableVertex<>(v, inf);
+                temp = new ComparableVertex<>(v, inf, null);
             }
             que.add(temp);
             list.put(v, temp);
         }
-        while (!que.isEmpty()) {
+        while (!que.isEmpty() && !que.peekMin().name.equals(end)) {
             ComparableVertex<V, E> vertex = que.removeMin();
             V v = vertex.name;
-            Double distance = vertex.distance;
-            if (v.equals(end) && vertex.distance < inf) {
-                return vertex.path;
-            }
+            double distance = vertex.distance;
             for (E e : adjacency.get(v)) {
                 V otherV = e.getOtherVertex(v);
                 ComparableVertex<V, E> oldV;
@@ -212,39 +275,42 @@ public class Graph<V, E extends IEdge<V> & Comparable<E>> {
                 double oldD = oldV.distance;
                 double newD = distance + e.getWeight();
                 if (newD < oldD) {
-                    IList<E> path = new DoubleLinkedList<>();
-                    for (E prevPath : vertex.path) {
-                        path.add(prevPath);
-                    }
                     ComparableVertex<V, E> newV;
-                    newV = new ComparableVertex<>(otherV, newD);
-                    path.add(e);
-                    newV.path = path;
+                    newV = new ComparableVertex<>(otherV, newD, e);
                     que.remove(oldV);
                     que.add(newV);
                     list.put(otherV, newV);
                 }
             }
         }
-        throw new NoPathExistsException();
+        ComparableVertex<V, E> pathFinder = list.get(end);
+        if (pathFinder.distance == inf) {
+            throw new NoPathExistsException();
+        }
+        while (pathFinder.edge != null) {
+            V v = pathFinder.name;
+            E e = pathFinder.edge;
+            V preV = e.getOtherVertex(v);
+            pathFinder = list.get(preV);
+            output.insert(0, e);
+        }
+        return output;
+
     }
 
     private static class ComparableVertex<V, E> implements Comparable<ComparableVertex<V, E>> {
-        IList<E> path;
+        final E edge;
         final V name;
         final double distance;
 
-        public ComparableVertex(V vertex, Double distance) {
-            this.path = new DoubleLinkedList<>();
+        public ComparableVertex(V vertex, Double distance, E edge) {
             this.name = vertex;
             this.distance = distance;
+            this.edge = edge;
         }
 
         public int compareTo(ComparableVertex<V, E> vertex){
-            if (distance < vertex.distance) {
-                return -1;
-            }
-            return 1;
+            return (int) (this.distance - vertex.distance);
         }
     }
 }
