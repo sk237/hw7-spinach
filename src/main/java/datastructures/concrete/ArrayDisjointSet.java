@@ -59,20 +59,15 @@ public class ArrayDisjointSet<T> implements IDisjointSet<T> {
         }
         int item1Parent = findSet(item1);
         int item2Parent = findSet(item2);
-        // what if they are already in the same set?
-        // do I need to throw to the exception?
-        if (item1Parent == item2Parent) {
-            throw new IllegalArgumentException();
+        if (item1Parent != item2Parent) {
+            if (pointers[item1Parent] == pointers[item2Parent]) {
+                pointers[item1Parent] = item2Parent;
+                pointers[item2Parent]--;
+            } else if (pointers[item1Parent] < pointers[item2Parent]) {
+                pointers[item2Parent] = item1Parent;
+            } else {
+                pointers[item1Parent] = item2Parent;
+            }
         }
-        // I need to use rank, but How?
-        if (pointers[item1Parent] == pointers[item2Parent]) {
-            pointers[item1Parent] = item2Parent;
-            pointers[item2Parent]--;
-        } else if (pointers[item1Parent] < pointers[item2Parent]){
-            pointers[item2Parent] = item1Parent;
-        } else {
-            pointers[item1Parent] = item2Parent;
-        }
-
     }
 }
